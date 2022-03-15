@@ -1,0 +1,20 @@
+{
+    "a": { 
+        "Username": "Player 0",
+        "Password": "a",
+        "Rank":"Admin",
+        "Meetings": [
+            {"MeetingId":"000000", "MeetingName":"The meeting of Player 0", "Ownership": "Host", "Map":"House"},
+            {"MeetingId":"000001", "MeetingName":"The meeting of Player 1", "Ownership": "Guest", "Map":"House"}
+        ]
+    },
+    "b": {
+        "Username": "Player 1",
+        "Password": "b",
+        "Rank":"User",
+        "Meetings": [
+            {"MeetingId":"000000", "MeetingName":"The meeting of Player 0", "Ownership": "Guest", "Map":"House"},
+            {"MeetingId":"000001", "MeetingName":"The meeting of Player 1", "Ownership": "Host", "Map":"House"}
+        ]
+    }
+}

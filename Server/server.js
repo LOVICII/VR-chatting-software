@@ -4,7 +4,6 @@ const app = express();
 
 app.use(express.json());
 
-let userInfo = require("./UserInfo.json");
 let clientInfo = require("./clientInfo.json"); // read client information from file 
 let meetingInfo = require("./meetingInfo.json"); // read meeting information from file
 
@@ -37,7 +36,7 @@ function login(req){
     const password = req.body.password;
     if (clientInfo[account]!=undefined && clientInfo[account]["Password"]==password){
         console.log(account, "login detail correct")
-        return true;
+        return clientInfo[account];
     }else{
         console.log(account, "login detail false")
         return false;
@@ -52,6 +51,7 @@ function register(req){
         let newClient = {
             "Username":username,
             "Password":password,
+            "Rank":"User",
             "Meetings":[]
         };
         clientInfo[account] = newClient;  // add new client information to clientInfo
@@ -74,82 +74,66 @@ app.post("/register", function(req, res){
 });
 
 app.post('/login', function (req, res){
-    if (login(req)){
-        res.status(200).json({"result": "success"});
+    const user = login(req);
+    if (user!=false){
+        const username = user["Username"];
+        const rank = user["Rank"];
+        res.status(200).json({"result": "success", "username":username, "Rank":rank });
     }else{
         res.status(401).json({'result': 'fail'});
     }
 });
 
 // Generate a new unique meeting id and send to the client for creating a new meeting
-app.get("/createNewMeeting", function(req, res){
+app.get("/createNewMeetingTest", function(req, res){
+    res.status(200).json({"MeetingId": "000000"}); 
+});
+
+// Generate a new unique meeting id and send to the client for creating a new meeting
+app.post("/createNewMeeting", function(req, res){
+    const account = req.body.account;
+    const meetingName = req.body.meetingName;
+    const guests = req.body.guests.split("\r\n");
+    const map = req.body.map;
+    console.log("guests:",guests);
+    console.log("account:", account);
     console.log("generating new ID...");
     do{
         newMeetingId = generateMeetingId(6);
     }while(meetingInfo[newMeetingId]!=undefined)
 
     newMeeting = {
-        "MeetingName": "",
+        "MeetingName": meetingName,
         "RequireAuthentication": "True",
-        "HostAccount": "",
-        "GuestAccounts": [],
-        "AccessCode": "1234"
+        "HostAccount": account,
+        "GuestAccounts": guests,
+        "AccessCode": "1234",
+        "Map": map
     }
     meetingInfo[newMeetingId] = newMeeting; // update meetingInfo
+    clientInfo[account]["Meetings"].push({"MeetingId":newMeetingId, "MeetingName":meetingName, "Ownership":"Host", "Map":map});
+    for(i=0; i<guests.length; i++){
+        try{
+            clientInfo[guests[i]]["Meetings"].push({"MeetingId":newMeetingId, "MeetingName":meetingName, "Ownership":"Guest", "Map":map});
+        }catch{
+            continue;
+        }
+    }
     meetingInfoJson = JSON.stringify(meetingInfo);
+    clientInfoJson = JSON.stringify(clientInfo);
     updateInfo("update_MeetingInfo.json", meetingInfoJson); // update the json file that store meetingInfo
+    updateInfo("update_clientInfo.json", clientInfoJson); // update the json file that store clientInfo
     console.log("new ID is", newMeetingId, "\n");
     res.status(200).json({"MeetingId": newMeetingId}); 
 });
 
 
-app.get("/ShowUserInfo", function(req, res){
-    res.end(JSON.stringify(userInfo)); 
+app.post("/findMeetings", function(req, res){
+    const account = req.body.account;
+    console.log("account:", account);
+    const meetings = {"meetings":clientInfo[account]["Meetings"]};
+    console.log(meetings);
+    res.status(200).json(meetings);
 });
 
-function add_User(req){
-    const ID = req.body.UserID;
-    const username = req.body.Username
-    const password = req.body.Password;
-    if(UserInfo[ID]==undefined){
-        let newUser = {
-            "UserID": ID,
-            "Username":username,
-            "Password":password
-        };
-        UserInfo[ID] = newUser;  // add new client information to clientInfo
-        UserInfoJson = JSON.stringify(clientInfo); 
-        updateInfo("update_UserInfo.json", UserInfoJson); // update the json file that store clientInfo
-        console.log("New user account created:",ID);
-        return true;
-    }else{
-        console.log(ID,"existed. Registration failed.")
-        return false;
-    }
-    
-}
-
-app.post("/AddUser", function(req, res){
-    if (add_User(req)){
-        res.status(200).json({"result": "success"});
-    }else{
-        res.status(401).json({'result': 'fail'});
-    } 
-});
-
-function delete_User(req){
-    const account = req.body.account
-    
-}
-
-
-app.post("/DeleteUser", function(req, res){
-    if (delete_User(req)){
-        res.status(200).json({"result": "success"});
-    }else{
-        res.status(401).json({'result': 'fail'});
-    }  
-});
-
-app.listen(50550)
-
+app.listen(8080)

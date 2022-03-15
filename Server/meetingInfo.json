@@ -1,0 +1,22 @@
+{
+    "000000": {
+        "MeetingName": "The meeting of Player 0",
+        "RequireAuthentication": "True",
+        "HostAccount": "a",
+        "GuestAccounts": [
+            "b"
+        ],
+        "AccessCode": "1234",
+        "Map":"House"
+    },
+    "000001": {
+        "MeetingName": "The meeting of Player 1",
+        "RequireAuthentication": "True",
+        "HostAccount": "b",
+        "GuestAccounts": [
+            "a"
+        ],
+        "AccessCode": "1234",
+        "Map":"House"
+    }
+}
